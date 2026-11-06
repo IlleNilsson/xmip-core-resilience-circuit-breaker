@@ -13,6 +13,7 @@
 
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
+use xcore::lock::Locked;
 
 use resilience::{Attempt, Decision, Guard};
 
@@ -79,9 +80,7 @@ impl CircuitBreaker {
     }
 
     fn lock(&self) -> std::sync::MutexGuard<'_, Inner> {
-        self.inner
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
+        self.inner.locked()
     }
 }
 
