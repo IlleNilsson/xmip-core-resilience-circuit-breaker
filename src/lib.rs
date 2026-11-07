@@ -136,6 +136,7 @@ impl Guard for CircuitBreaker {
 mod tests {
     use super::*;
     use resilience::{Guarded, execute};
+    use std::assert_matches;
     use std::cell::Cell;
     use xcore::Failure;
 
@@ -193,10 +194,7 @@ mod tests {
         std::thread::sleep(Duration::from_millis(4));
         assert_eq!(breaker.state(), State::HalfOpen);
         assert_eq!(breaker.before(1), Decision::Proceed, "the trial goes");
-        assert!(
-            matches!(breaker.before(1), Decision::Refuse(_)),
-            "one at a time"
-        );
+        assert_matches!(breaker.before(1), Decision::Refuse(_), "one at a time");
         breaker.after(&failed());
         assert_eq!(breaker.state(), State::Open, "a failed trial re-opens");
         std::thread::sleep(Duration::from_millis(4));
@@ -221,7 +219,7 @@ mod tests {
             calls.set(calls.get() + 1);
             Ok(())
         });
-        assert!(matches!(second, Ok(Guarded::Refused(_))), "{second:?}");
+        assert_matches!(second, Ok(Guarded::Refused(_)), "{second:?}");
         assert_eq!(calls.get(), 1, "refused before any attempt");
     }
 
@@ -256,7 +254,7 @@ mod tests {
             calls.set(calls.get() + 1);
             Err(Failure::retryable("again"))
         });
-        assert!(matches!(outcome, Ok(Guarded::Refused(_))), "{outcome:?}");
+        assert_matches!(outcome, Ok(Guarded::Refused(_)), "{outcome:?}");
         assert_eq!(
             calls.get(),
             2,
